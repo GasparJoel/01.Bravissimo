@@ -115,6 +115,55 @@ const menuItems = {
   ]
 };
 
+const CustomerInfoForm = ({ customerName, setCustomerName, customerPhone, setCustomerPhone, paymentMethod, setPaymentMethod }) => {
+  return (
+    <div className="space-y-4 mb-4">
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Nombre completo"
+          value={customerName}
+          onChange={(e) => setCustomerName(e.target.value)}
+          className="w-full p-3 pl-10 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+        />
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <User className="w-5 h-5" />
+        </span>
+      </div>
+      <div className="relative">
+        <input
+          type="tel"
+          placeholder="Teléfono"
+          value={customerPhone}
+          onChange={(e) => setCustomerPhone(e.target.value)}
+          className="w-full p-3 pl-10 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+        />
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <Phone className="w-5 h-5" />
+        </span>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Método de pago</label>
+        <div className="grid grid-cols-2 gap-2">
+          {["Efectivo", "Yape", "Plin", "Tarjeta"].map((method) => (
+            <button
+              key={method}
+              type="button"
+              onClick={() => setPaymentMethod(method)}
+              className={`p-3 rounded-lg border transition-all flex items-center justify-center gap-2 ${
+                paymentMethod === method ? "bg-primary text-white border-primary" : "border-gray-300 hover:border-primary"
+              }`}
+            >
+              {method === "Tarjeta" ? <CreditCard className="w-4 h-4" /> : <Wallet className="w-4 h-4" />}
+              {method}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const Menu = () => {
   //Categorias
   const [activeCategory, setActiveCategory] = useState('helados');
@@ -221,87 +270,7 @@ export const Menu = () => {
     window.open(whatsappLink, '_blank');
   };
 
-  const CustomerInfoForm = () => (
-    <div className="space-y-4 mb-4">
-      <div className="relative">
-        <input
-          type="text"
-          placeholder="Nombre completo"
-          value={customerName}
-          onChange={(e) => setCustomerName(e.target.value)}
-          className="w-full p-3 pl-10 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-        />
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-          <User className="w-5 h-5" />
-        </span>
-      </div>
-      <div className="relative">
-        <input
-          type="tel"
-          placeholder="Teléfono"
-          value={customerPhone}
-          onChange={(e) => setCustomerPhone(e.target.value)}
-          className="w-full p-3 pl-10 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-        />
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-          <Phone className="w-5 h-5" />
-        </span>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Método de pago</label>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setPaymentMethod('Efectivo')}
-            className={`p-3 rounded-lg border transition-all flex items-center justify-center gap-2 ${
-              paymentMethod === 'Efectivo' 
-                ? 'bg-primary text-white border-primary' 
-                : 'border-gray-300 hover:border-primary'
-            }`}
-          >
-            <Wallet className="w-4 h-4" />
-            Efectivo
-          </button>
-          <button
-            type="button"
-            onClick={() => setPaymentMethod('Yape')}
-            className={`p-3 rounded-lg border transition-all flex items-center justify-center gap-2 ${
-              paymentMethod === 'Yape' 
-                ? 'bg-primary text-white border-primary' 
-                : 'border-gray-300 hover:border-primary'
-            }`}
-          >
-            <Phone className="w-4 h-4" />
-            Yape
-          </button>
-          <button
-            type="button"
-            onClick={() => setPaymentMethod('Plin')}
-            className={`p-3 rounded-lg border transition-all flex items-center justify-center gap-2 ${
-              paymentMethod === 'Plin' 
-                ? 'bg-primary text-white border-primary' 
-                : 'border-gray-300 hover:border-primary'
-            }`}
-          >
-            <Phone className="w-4 h-4" />
-            Plin
-          </button>
-          <button
-            type="button"
-            onClick={() => setPaymentMethod('Tarjeta')}
-            className={`p-3 rounded-lg border transition-all flex items-center justify-center gap-2 ${
-              paymentMethod === 'Tarjeta' 
-                ? 'bg-primary text-white border-primary' 
-                : 'border-gray-300 hover:border-primary'
-            }`}
-          >
-            <CreditCard className="w-4 h-4" />
-            Tarjeta
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+ 
 
     // Función para obtener el total de productos en el carrito
     const calculateTotalItems = () => {
@@ -316,7 +285,14 @@ export const Menu = () => {
        
        <ButtonsOrderType orderType={orderType} setOrderType={setOrderType} />
 
-        {orderType && <CustomerInfoForm />}
+        {orderType && <CustomerInfoForm
+          customerName={customerName}
+          setCustomerName={setCustomerName}
+          customerPhone={customerPhone}
+          setCustomerPhone={setCustomerPhone}
+          paymentMethod={paymentMethod}
+          setPaymentMethod={setPaymentMethod}
+        />}
 
         {orderType === 'delivery' && (
           <div className="mb-8">
