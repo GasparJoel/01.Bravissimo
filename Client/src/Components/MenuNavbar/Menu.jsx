@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { ButtonsOrderType } from '../CardCompra/ButtonsOrderType';
 import { Title } from '../CardCompra/Title';
+import { ButtonCategory } from '../Category/ButtonCategory';
+import { CardProducts } from '../Category/CardProducts';
 
 const categories = [
   { id: 'helados', name: 'Helados', icon: IceCream, color: 'bg-blue-500' },
@@ -114,11 +116,14 @@ const menuItems = {
 };
 
 export const Menu = () => {
+  //Categorias
   const [activeCategory, setActiveCategory] = useState('helados');
+  //Carrito de compras
   const [cart, setCart] = useState([]);
   //Para el tipo de orden
   const [orderType, setOrderType] = useState('');
 
+  //datos de form
   const [location, setLocation] = useState('');
   const [reference, setReference] = useState('');
   const [pickupTime, setPickupTime] = useState('');
@@ -344,54 +349,22 @@ export const Menu = () => {
           </div>
         )}
 
+        {/* BOTONES DE LAS CATEGORIAS  */}
         <div className="flex flex-wrap gap-4 justify-center mb-12">
           {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setActiveCategory(category.id)}
-              className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
-                activeCategory === category.id
-                  ? `${category.color} text-white shadow-lg scale-105`
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <category.icon className="inline-block mr-2" />
-              {category.name}
-            </button>
+
+            <ButtonCategory key={category.id} category={category} setActiveCategory={setActiveCategory} activeCategory={activeCategory}  />
+           
           ))}
         </div>
 
+
+          {/* Productos recorridos del arreglo    */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {menuItems[activeCategory].map((item, index) => (
-            <div key={index} className="p-6 bg-white rounded-lg shadow-md">
-              <img
-                src={item.image}
-                alt={item.name}
-                className="w-full h-48 object-cover rounded-lg mb-4"
-              />
-              <h3 className="text-lg font-semibold mb-2">{item.name}</h3>
-              <p className="text-gray-600 mb-4">{item.description}</p>
-              {item.variants ? (
-                <div className="space-y-2">
-                  {item.variants.map((variant, i) => (
-                    <button
-                      key={i}
-                      onClick={() => addToCart({ name: `${item.name} - ${variant.size}`, price: variant.price })}
-                      className="block w-full py-2 px-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-                    >
-                      Agregar {variant.size} - {variant.price}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <button
-                  onClick={() => addToCart({ name: item.name, price: item.price })}
-                  className="block w-full py-2 px-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-                >
-                  Agregar - {item.price}
-                </button>
-              )}
-            </div>
+
+            <CardProducts key={index} item={item} addToCart={addToCart} />
+           
           ))}
         </div>
       </div>
