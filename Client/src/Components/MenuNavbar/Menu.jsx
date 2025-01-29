@@ -1,5 +1,23 @@
 import { useState } from 'react';
-import { IceCream, Coffee, Cake, Utensils } from 'lucide-react';
+import { 
+  IceCream, 
+  Coffee, 
+  Cake, 
+  Utensils, 
+  ShoppingCart, 
+  Trash2, 
+  X, 
+  Plus, 
+  Minus,
+  CreditCard,
+  Wallet,
+  Phone,
+  User,
+  Minimize2,
+  Maximize2
+} from 'lucide-react';
+import { ButtonsOrderType } from '../CardCompra/ButtonsOrderType';
+import { Title } from '../CardCompra/Title';
 
 const categories = [
   { id: 'helados', name: 'Helados', icon: IceCream, color: 'bg-blue-500' },
@@ -98,13 +116,41 @@ const menuItems = {
 export const Menu = () => {
   const [activeCategory, setActiveCategory] = useState('helados');
   const [cart, setCart] = useState([]);
+  //Para el tipo de orden
   const [orderType, setOrderType] = useState('');
+
   const [location, setLocation] = useState('');
   const [reference, setReference] = useState('');
   const [pickupTime, setPickupTime] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('');
+
+  const [isCollapsed, setIsCollapsed] = useState(false); // Estado para controlar la visibilidad del carrito
 
   const addToCart = (item) => {
-    setCart((prev) => [...prev, item]);
+    setCart((prev) => {
+      const existingItem = prev.find(
+        (i) => i.name === item.name && i.price === item.price
+      );
+  
+      if (existingItem) {
+        return prev.map((i) =>
+          i.name === item.name && i.price === item.price
+            ? { ...i, quantity: (i.quantity || 1) + 1 }
+            : i
+        );
+      }
+  
+      // Aquí es donde se asegura que la propiedad 'image' sea parte del item cuando se agrega
+      return [
+        ...prev,
+        {
+          ...item,  // item ya debería tener la propiedad 'image' si está presente
+          quantity: 1,
+        },
+      ];
+    });
   };
 
   const removeFromCart = (index) => {
@@ -115,51 +161,157 @@ export const Menu = () => {
     setCart([]);
   };
 
+  const updateQuantity = (index, change) => {
+    setCart(prev => prev.map((item, i) => {
+      if (i === index) {
+        const newQuantity = (item.quantity || 1) + change;
+        if (newQuantity < 1) return item;
+        return { ...item, quantity: newQuantity };
+      }
+      return item;
+    }));
+  };
+
+  const calculateTotal = () => {
+    return cart.reduce((total, item) => {
+      const price = parseFloat(item.price.replace('S/. ', ''));
+      return total + (price * (item.quantity || 1));
+    }, 0).toFixed(2);
+  };
+
   const handleSubmit = () => {
-    const orderDetails = cart.map((item) => `- ${item.name}: ${item.price}`).join('\n');
+    if (!orderType) {
+      alert('Por favor seleccione tipo de entrega (Delivery o Recojo)');
+      return;
+    }
+
+    if (!customerName || !customerPhone || !paymentMethod) {
+      alert('Por favor complete sus datos personales y método de pago');
+      return;
+    }
+
+    if (orderType === 'delivery' && (!location || !reference)) {
+      alert('Por favor complete los datos de entrega');
+      return;
+    }
+
+    if (orderType === 'pickup' && !pickupTime) {
+      alert('Por favor seleccione hora de recojo');
+      return;
+    }
+
+    const orderDetails = cart.map((item) => 
+      `- ${item.name} x${item.quantity || 1}: ${item.price}`
+    ).join('\n');
+    
+    const total = `Total: S/. ${calculateTotal()}`;
+    const deliveryType = `Tipo de entrega: ${orderType === 'delivery' ? 'Delivery' : 'Recojo'}`;
     const userDetails = orderType === 'delivery'
       ? `Localización: ${location}\nReferencia: ${reference}`
       : `Hora de recojo: ${pickupTime}`;
+    const customerDetails = `Nombre: ${customerName}\nTeléfono: ${customerPhone}\nMétodo de pago: ${paymentMethod}`;
 
-    const message = `Hola, me gustaría realizar un pedido:\n${orderDetails}\n\n${userDetails}`;
+    const message = `Hola, me gustaría realizar un pedido:\n\n${orderDetails}\n\n${total}\n${deliveryType}\n${customerDetails}\n${userDetails}`;
     const whatsappLink = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappLink, '_blank');
   };
 
-  return (
-    <section id="menu" className="py-20  bg-gradient-to-br from-secondary/5 to-primary/5">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Nuestro Menú
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Descubre nuestra variedad de productos elaborados con los mejores ingredientes
-          </p>
+  const CustomerInfoForm = () => (
+    <div className="space-y-4 mb-4">
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Nombre completo"
+          value={customerName}
+          onChange={(e) => setCustomerName(e.target.value)}
+          className="w-full p-3 pl-10 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+        />
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <User className="w-5 h-5" />
+        </span>
+      </div>
+      <div className="relative">
+        <input
+          type="tel"
+          placeholder="Teléfono"
+          value={customerPhone}
+          onChange={(e) => setCustomerPhone(e.target.value)}
+          className="w-full p-3 pl-10 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+        />
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <Phone className="w-5 h-5" />
+        </span>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Método de pago</label>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setPaymentMethod('Efectivo')}
+            className={`p-3 rounded-lg border transition-all flex items-center justify-center gap-2 ${
+              paymentMethod === 'Efectivo' 
+                ? 'bg-primary text-white border-primary' 
+                : 'border-gray-300 hover:border-primary'
+            }`}
+          >
+            <Wallet className="w-4 h-4" />
+            Efectivo
+          </button>
+          <button
+            type="button"
+            onClick={() => setPaymentMethod('Yape')}
+            className={`p-3 rounded-lg border transition-all flex items-center justify-center gap-2 ${
+              paymentMethod === 'Yape' 
+                ? 'bg-primary text-white border-primary' 
+                : 'border-gray-300 hover:border-primary'
+            }`}
+          >
+            <Phone className="w-4 h-4" />
+            Yape
+          </button>
+          <button
+            type="button"
+            onClick={() => setPaymentMethod('Plin')}
+            className={`p-3 rounded-lg border transition-all flex items-center justify-center gap-2 ${
+              paymentMethod === 'Plin' 
+                ? 'bg-primary text-white border-primary' 
+                : 'border-gray-300 hover:border-primary'
+            }`}
+          >
+            <Phone className="w-4 h-4" />
+            Plin
+          </button>
+          <button
+            type="button"
+            onClick={() => setPaymentMethod('Tarjeta')}
+            className={`p-3 rounded-lg border transition-all flex items-center justify-center gap-2 ${
+              paymentMethod === 'Tarjeta' 
+                ? 'bg-primary text-white border-primary' 
+                : 'border-gray-300 hover:border-primary'
+            }`}
+          >
+            <CreditCard className="w-4 h-4" />
+            Tarjeta
+          </button>
         </div>
+      </div>
+    </div>
+  );
 
-        <div className="flex justify-center gap-4 mb-8">
-          <button
-            onClick={() => setOrderType('delivery')}
-            className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
-              orderType === 'delivery'
-                ? 'bg-primary text-white shadow-lg scale-105' 
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            Delivery
-          </button>
-          <button
-            onClick={() => setOrderType('pickup')}
-            className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
-              orderType === 'pickup'
-                ? 'bg-primary text-white shadow-lg scale-105'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            Recojo
-          </button>
-        </div>
+    // Función para obtener el total de productos en el carrito
+    const calculateTotalItems = () => {
+      return cart.reduce((total, item) => total + item.quantity, 0);
+    };
+
+  return (
+    <section id="menu" className="py-20 bg-gradient-to-br from-secondary/5 to-primary/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+       <Title/>
+       
+       <ButtonsOrderType orderType={orderType} setOrderType={setOrderType} />
+
+        {orderType && <CustomerInfoForm />}
 
         {orderType === 'delivery' && (
           <div className="mb-8">
@@ -176,109 +328,167 @@ export const Menu = () => {
               value={reference}
               onChange={(e) => setReference(e.target.value)}
               className="w-full p-3 border rounded-lg"
-              />
-              </div>
-            )}
-    
-            {orderType === 'pickup' && (
-              <div className="mb-8">
-                <input
-                  type="time"
-                  placeholder="Hora de recojo"
-                  value={pickupTime}
-                  onChange={(e) => setPickupTime(e.target.value)}
-                  className="w-full p-3 border rounded-lg"
-                />
-              </div>
-            )}
-    
-              <div className="flex flex-wrap gap-4 justify-center mb-12">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setActiveCategory(category.id)}
-                  className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
-                    activeCategory === category.id
-                      ? `${category.color} text-white shadow-lg scale-105` // Usa el color único si está activo
-                      : 'bg-white text-gray-600 hover:bg-gray-50' // Usa colores neutros si no está activo
-                  }`}
-                >
-                  <category.icon className="inline-block mr-2" />
-                  {category.name}
-                </button>
-              ))}
-            </div>
-    
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {menuItems[activeCategory].map((item, index) => (
-                <div key={index} className="p-6 bg-white rounded-lg shadow-md">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-full h-48 object-cover rounded-lg mb-4"
-                  />
-                  <h3 className="text-lg font-semibold mb-2">{item.name}</h3>
-                  <p className="text-gray-600 mb-4">{item.description}</p>
-                  {item.variants ? (
-                    <div className="space-y-2">
-                      {item.variants.map((variant, i) => (
-                        <button
-                          key={i}
-                          onClick={() => addToCart({ name: `${item.name} - ${variant.size}`, price: variant.price })}
-                          className="block w-full text-left py-2 px-4 bg-gray-100 rounded-lg hover:bg-gray-200"
-                        >
-                          {variant.size} - {variant.price}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => addToCart({ name: item.name, price: item.price })}
-                      className="block w-full text-left py-2 px-4 bg-gray-100 rounded-lg hover:bg-gray-200"
-                    >
-                      Añadir - {item.price}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
+            />
           </div>
-    
-          <aside className="fixed top-20 right-4 w-80 bg-white shadow-lg rounded-lg p-4">
-            <h3 className="text-xl font-bold mb-4">Carrito de Compras</h3>
-            {cart.length > 0 ? (
-              <ul className="space-y-4">
-                {cart.map((item, index) => (
-                  <li key={index} className="flex justify-between items-center">
-                    <span>{item.name}</span>
-                    <span>{item.price}</span>
-                    <button
-                      onClick={() => removeFromCart(index)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Quitar
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-600">Tu carrito está vacío.</p>
-            )}
+        )}
+
+        {orderType === 'pickup' && (
+          <div className="mb-8">
+            <input
+              type="time"
+              placeholder="Hora de recojo"
+              value={pickupTime}
+              onChange={(e) => setPickupTime(e.target.value)}
+              className="w-full p-3 border rounded-lg"
+            />
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-4 justify-center mb-12">
+          {categories.map((category) => (
             <button
-              onClick={clearCart}
-              className="w-full mt-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              key={category.id}
+              onClick={() => setActiveCategory(category.id)}
+              className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
+                activeCategory === category.id
+                  ? `${category.color} text-white shadow-lg scale-105`
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
             >
-              Vaciar Carrito
+              <category.icon className="inline-block mr-2" />
+              {category.name}
             </button>
-            {cart.length > 0 && (
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {menuItems[activeCategory].map((item, index) => (
+            <div key={index} className="p-6 bg-white rounded-lg shadow-md">
+              <img
+                src={item.image}
+                alt={item.name}
+                className="w-full h-48 object-cover rounded-lg mb-4"
+              />
+              <h3 className="text-lg font-semibold mb-2">{item.name}</h3>
+              <p className="text-gray-600 mb-4">{item.description}</p>
+              {item.variants ? (
+                <div className="space-y-2">
+                  {item.variants.map((variant, i) => (
+                    <button
+                      key={i}
+                      onClick={() => addToCart({ name: `${item.name} - ${variant.size}`, price: variant.price })}
+                      className="block w-full py-2 px-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                    >
+                      Agregar {variant.size} - {variant.price}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <button
+                  onClick={() => addToCart({ name: item.name, price: item.price })}
+                  className="block w-full py-2 px-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                >
+                  Agregar - {item.price}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <aside className="fixed top-20 right-4 w-80 bg-white shadow-xl rounded-lg overflow-hidden">
+      <div className="bg-primary text-white p-4 flex items-center gap-2">
+        <ShoppingCart className="w-6 h-6" />
+        <span className="text-2xl text-secondary-light font-semibold">{calculateTotalItems()} </span>
+        <span className="text-lg"> S/. {calculateTotal()}</span>
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="ml-auto p-2 rounded-full hover:bg-primary/20 transition-colors"
+        >
+          {isCollapsed ? <Maximize2 /> : <Minimize2 />}
+        </button>
+      </div>
+
+      <div className={`p-4 ${isCollapsed ? "hidden" : ""}`}>
+        <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
+          {cart.length > 0 ? (
+            <ul className="space-y-4">
+              {cart.map((item, index) => (
+                <li key={index} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                  <div className="flex-shrink-0">
+                    {/* Imagen pequeña del producto */}
+                    <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-lg" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">{item.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <button
+                        onClick={() => updateQuantity(index, -1)}
+                        className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                        disabled={item.quantity <= 1}
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="font-medium">{item.quantity || 1}</span>
+                      <button
+                        onClick={() => updateQuantity(index, 1)}
+                        className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <span className="font-medium">{item.price}</span>
+                  <button
+                    onClick={() => removeFromCart(index)}
+                    className="p-1 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>Tu carrito está vacío</p>
+            </div>
+          )}
+        </div>
+
+        {cart.length > 0 && (
+          <>
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex justify-between items-center text-lg font-bold">
+                <span>Total de productos:</span>
+                <span>{calculateTotalItems()} artículos</span>
+              </div>
+              <div className="flex justify-between items-center text-lg font-bold mt-2">
+                <span>Total:</span>
+                <span>S/. {calculateTotal()}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2 mt-4">
+              <button
+                onClick={clearCart}
+                className="w-full py-2 px-4 flex items-center justify-center gap-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                <Trash2 className="w-5 h-5" />
+                Vaciar Carrito
+              </button>
               <button
                 onClick={handleSubmit}
-                className="w-full mt-2 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark"
+                className="w-full py-2 px-4 flex items-center justify-center gap-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
               >
+                <ShoppingCart className="w-5 h-5" />
                 Realizar Pedido
               </button>
-            )}
-          </aside>
-        </section>
-      );
-    };
+            </div>
+          </>
+        )}
+      </div>
+    </aside>
+    </section>
+  );
+};
